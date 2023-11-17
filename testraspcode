@@ -1,0 +1,78 @@
+import numpy as np
+from datetime import datetime
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+import joblib
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def obtener_dia_semana_categorico():
+    return datetime.today().weekday()
+
+def obtener_vector_caracteristicas(flujo_inicial, flujo_salida, zona):
+    dia_semana_categorico = obtener_dia_semana_categorico()
+
+    return np.array([flujo_inicial, flujo_salida, zona, dia_semana_categorico]).reshape(1, -1)
+
+def realizar_prediccion(modelo, vector_caracteristicas):
+    return modelo.predict(vector_caracteristicas)
+
+def enviar_correo(fuga_reporte, zona, hora, fecha):
+    remitente = "svm.model.receiver@gmail.com"
+    destinatario = "spoty.barbie96@gmail.com"
+    asunto = "FUGA DETECTADA"
+
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_usuario = "svm.model.receiver@gmail.com"
+    smtp_contrasena = "mfki nkel wgru sxkw"
+
+    mensaje = MIMEMultipart()
+    mensaje["From"] = remitente
+    mensaje["To"] = destinatario
+    mensaje["Subject"] = asunto
+
+    cuerpo_mensaje = f"Fuga detectada en la zona {zona}, a las {hora} el día {fecha}.\n\n"
+    cuerpo_mensaje += f"Reporte de la fuga:\n{fuga_reporte}\n\nIA solutions"
+
+    mensaje.attach(MIMEText(cuerpo_mensaje, "plain"))
+
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_usuario, smtp_contrasena)
+
+        server.sendmail(remitente, destinatario, mensaje.as_string())
+
+def main():
+    modelo = joblib.load('modelo_svm.joblib')
+
+    try:
+        while True:
+            flujo_inicial = float(input("Ingrese el porcentaje de flujo inicial: "))
+            flujo_salida = float(input("Ingrese el porcentaje de flujo de salida: "))
+            zona = int(input("Ingrese la zona: "))
+
+            vector_caracteristicas = obtener_vector_caracteristicas(flujo_inicial, flujo_salida, zona)
+
+            prediccion = realizar_prediccion(modelo, vector_caracteristicas)
+
+            if prediccion == 1:
+                hora = datetime.now().strftime("%H:%M:%S")
+                fecha = datetime.now().strftime("%Y-%m-%d")
+                diferencia_flujo = abs(flujo_inicial - flujo_salida)
+
+                fuga_reporte = f"Porcentaje de flujo inicial: {flujo_inicial}\n"
+                fuga_reporte += f"Porcentaje de flujo de salida: {flujo_salida}\n"
+                fuga_reporte += f"Diferencia entre flujos: {diferencia_flujo}"
+
+                enviar_correo(fuga_reporte, zona, hora, fecha)
+
+                print(f'Resultado de la predicción: {prediccion}')
+                print('Correo electrónico enviado con éxito.')
+
+    except KeyboardInterrupt:
+        print("Detenido por el usuario.")
+
+if __name__ == "__main__":
+    main()
