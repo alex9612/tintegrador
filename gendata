@@ -1,0 +1,63 @@
+import pandas as pd
+import numpy as np
+
+def generar_datos():
+    dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    dias_numeros = [0, 1, 2, 3, 4, 5, 6]  # Asignación de valores a los días de la semana
+    datos = []
+
+    for dia, dia_numero in zip(dias_semana, dias_numeros):
+        print(f'Generando datos para el día: {dia}')
+        for zona in range(1, 4):  # 3 zonas
+            print(f'  Generando datos para la zona: {zona}')
+            for _ in range(33334):  # Aproximadamente 33,334 datos por zona (100,000 / 3)
+                flujo_inicial = np.random.rand()
+                flujo_salida = np.random.rand()
+                diferencia_A_Aprime = abs(flujo_inicial - flujo_salida)
+
+                if dia_numero in [0, 4, 5]:  # Lunes, Viernes, Sábado
+                    if diferencia_A_Aprime <= 0.2:
+                        probabilidad_Z = np.random.rand() * 0.2
+                        
+                    elif 0.4 <= diferencia_A_Aprime <= 0.6:
+                        probabilidad_Z = np.random.rand() * 0.4 + 0.6
+                    elif diferencia_A_Aprime >= 0.8:
+                        probabilidad_Z = np.random.rand() * 0.2 + 0.8
+                    else:
+                        probabilidad_Z = np.random.rand()
+                elif dia_numero in [1, 2, 3]:  # Martes, Miércoles, Jueves
+                    if diferencia_A_Aprime <= 0.05:
+                        probabilidad_Z = np.random.rand() * 0.05
+                    elif 0.2 <= diferencia_A_Aprime <= 0.3:
+                        probabilidad_Z = np.random.rand() * 0.4 + 0.6
+                    elif diferencia_A_Aprime >= 0.4:
+                        probabilidad_Z = np.random.rand() * 0.2 + 0.8
+                    else:
+                        probabilidad_Z = np.random.rand()
+                elif dia_numero == 6:  # Domingo
+                    if diferencia_A_Aprime <= 0.3:
+                        probabilidad_Z = np.random.rand() * 0.3
+                    elif 0.31 <= diferencia_A_Aprime <= 0.7:
+                        probabilidad_Z = np.random.rand() * 0.4 + 0.6
+                    elif diferencia_A_Aprime >= 0.71:
+                        probabilidad_Z = np.random.rand() * 0.2 + 0.8
+                    else:
+                        probabilidad_Z = np.random.rand()
+
+                # Redondear a 1 si es mayor o igual a 0.5, y a 0 si es menor a 0.5
+                probabilidad_Z = 1 if probabilidad_Z >= 0.5 else 0
+
+                datos.append([flujo_inicial, flujo_salida, zona, dia_numero, probabilidad_Z])
+
+    print('Datos generados exitosamente.')
+    return datos
+
+datos_generados = generar_datos()
+
+columnas = ['FlujoInicial', 'FlujoSalida', 'Zona', 'DiaSemana', 'ProbabilidadFuga']
+df_simulado = pd.DataFrame(datos_generados, columns=columnas)
+
+nombre_archivo = 'dataset.csv'
+df_simulado.to_csv(nombre_archivo, index=False)
+
+print(f'CSV generado exitosamente en: {nombre_archivo}')
